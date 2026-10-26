@@ -68,7 +68,9 @@
             { code: 66, en: "Messaad",        fr: "Messaad",       ar: "مسعد",         lat: 34.1543, lng: 3.5031,  dist: 371 },
             { code: 67, en: "Ksar El Boukhari",fr: "Ksar El Boukhari",     ar: "قصر البخاري",         lat: 35.88889, lng: 2.74905,  dist: 141 },
             { code: 68, en: "Bou Saâda",       fr: "Bou Saâda",      ar: " بوسعادة",             lat: 35.21324, lng: 4.18048,  dist: 240 },
-            { code: 69, en: "El Abiodh Sidi Cheikh", fr: "El Abiodh Sidi Cheikh",         ar: "الأبيض سيدي الشيخ",             lat: 32.89648, lng: 0.54639,  dist: 610 }
+            { code: 69, en: "El Abiodh Sidi Cheikh", fr: "El Abiodh Sidi Cheikh",         ar: "الأبيض سيدي الشيخ",             lat: 32.89648, lng: 0.54639,  dist: 610 },
+            { code: 69, en: "Ain Amenas", fr: "Ain Amenas",         ar: "إن أميناس",             lat:  28.03867, lng: 9.57615,  dist: 1508 },
+            { code: 69, en: "Hassi Messaoud", fr: "Hassi Messaoud",         ar: " حاسي مسعود",             lat: 31.6804, lng: 6.0729,  dist: 856}
         ];
 
         // Language Dictionary
