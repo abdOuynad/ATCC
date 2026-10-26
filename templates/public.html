@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mdexpress</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="{{url_for('static',filename='script/tailwind.js')}}"></script>
+
+    <!-- Fonts: Inter & Cairo for Arabic support -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome & Leaflet CSS for Map Visualization -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+    <!-- Chart.js for Cost Visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!--import css File in html Page -->
+    <link rel="stylesheet" href="{{url_for('static',filename='css/style.css')}}">
+
+</head>
+<body class="dark:bg-[#080d1a] bg-slate-100 dark:text-gray-100 text-gray-800 min-h-screen flex flex-col justify-between relative selection:bg-algeria-green selection:text-white">
+
+    <header class="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        <div class="glass-panel rounded-2xl px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+            <!-- Brand Logo -->
+            <div class="flex items-center gap-3">
+                <!--<div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-algeria-green via-emerald-600 to-algeria-red flex items-center justify-center shadow-lg shadow-emerald-900/30">-->
+                <div class="w-13 h-11 flex">
+                    <!--<i class="fa-solid fa-map-location-dot text-white text-xl"></i>-->
+                    <img src="{{url_for('static',filename='css/mdexpress.png')}}" alt="">
+                </div>
+                <div>
+                    <h1 class="text-xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-200 to-algeria-gold">
+                        MD<span class="text-emerald-500">Express</span> <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-semibold border border-emerald-500/30">69 WILAYAS</span>
+                    </h1>
+                    <p class="text-xs text-gray-400 dark:text-gray-400" id="header-subtitle">Algeria Highway & Travel Cost Estimator</p>
+                </div>
+            </div>
+
+            <!-- Controls: Theme & Language -->
+            <div class="flex items-center gap-3 ms-auto">
+                <!-- Theme Toggle -->
+                <button onclick="toggleTheme()" class="p-2.5 rounded-xl bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:text-emerald-500 transition-all">
+                    <i class="fa-solid fa-moon dark:hidden"></i>
+                    <i class="fa-solid fa-sun hidden dark:inline text-amber-400"></i>
+                </button>
+
+                <!-- Language Selector Buttons -->
+                <div class="inline-flex rounded-xl bg-gray-200 dark:bg-gray-900 p-1 border border-gray-300 dark:border-gray-800">
+                    <button onclick="setLanguage('ar')" id="btn-lang-ar" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-gray-600 dark:text-gray-400 hover:text-emerald-500">
+                        العربية
+                    </button>
+                    <button onclick="setLanguage('fr')" id="btn-lang-fr" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-gray-600 dark:text-gray-400 hover:text-emerald-500">
+                        Français
+                    </button>
+                    <button onclick="setLanguage('en')" id="btn-lang-en" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all bg-algeria-green text-white shadow-md">
+                        English
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+            <!-- LEFT FORM CONTAINER -->
+            <div class="lg:col-span-6 glass-panel rounded-3xl p-6 sm:p-8 space-y-6">
+                <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 pb-4">
+                    <div>
+                        <h2 class="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-2" id="form-title">
+                            <i class="fa-solid fa-sliders text-emerald-500"></i> Journey Parameters
+                        </h2>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1" id="form-desc">Origin set to Algiers (16). Choose destination and vehicle specs.</p>
+                    </div>
+                    <span class="text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                        Algiers Departure
+                    </span>
+                </div>
+
+                <form onsubmit="event.preventDefault();" class="space-y-5">
+
+                    <!-- Departure & Destination Selection -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Depart (Fixed) -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2" id="lbl-depart">
+                                <i class="fa-solid fa-circle-dot text-algeria-red me-1"></i> Departure Wilaya
+                            </label>
+                            <div class="relative">
+                                <input type="text" value="16 - Alger (Algiers)" readonly
+                                       class="w-full bg-gray-100 dark:bg-gray-900/90 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-600 dark:text-gray-300 font-medium cursor-not-allowed outline-none">
+                                <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-emerald-500 rtl:left-0 rtl:right-auto rtl:pl-3">
+                                    <i class="fa-solid fa-lock text-xs"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Destination Select with Autocomplete Search -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2" id="lbl-dest">
+                                <i class="fa-solid fa-location-dot text-emerald-500 me-1"></i> Destination Wilaya
+                            </label>
+                            <div class="relative">
+                                <input type="text" id="dest-search" placeholder="Type to search wilaya..." onfocus="showWilayaDropdown()" oninput="filterWilayas()"
+                                       class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white font-medium focus:ring-2 focus:ring-emerald-500 outline-none transition-all cursor-pointer">
+                                <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400 rtl:left-0 rtl:right-auto rtl:pl-3">
+                                    <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                                </span>
+
+                                <!-- Custom Options Dropdown List -->
+                                <div id="wilaya-dropdown" class="hidden absolute left-0 right-0 top-full mt-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl max-h-60 overflow-y-auto z-50 divide-y divide-gray-100 dark:divide-gray-800">
+                                    <!-- Dynamic List -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vehicle Category & Fuel Type -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Vehicle Type -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2" id="lbl-vehicle">
+                                <i class="fa-solid fa-car text-blue-500 me-1"></i> Vehicle Category
+                            </label>
+                            <div class="relative">
+                                <select id="vehicle-type" onchange="onVehicleChange()"
+                                        class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white font-medium focus:ring-2 focus:ring-emerald-500 outline-none transition-all appearance-none cursor-pointer">
+                                    <option value="Fourgonnette" data-consumption="0">Fourgonnette </option>
+                                    <option value="Fourgon_1T5" data-consumption="1.5" selected>Fourgon/ 1T5 </option>
+                                    <option value="Fourgon_2T5" data-consumption="2.5">Fourgon/ 2T5 </option>
+                                    <option value="Camion_3T5" data-consumption="3.5">Camion / 3T5 </option>
+                                    <option value="Camion_5T_7T" data-consumption="5.5">Camion / 5T5 /7T5 </option>
+                                    <option value="Camion_10T" data-consumption="5.5">Camion / 10T5 </option>
+                                    <option value="Camion_20T" data-consumption="20.5">Camion / 20T5 </option>
+                                    <option value="Camion_40T" data-consumption="20.5">Camion / 40T5 </option>
+                                </select>
+                                <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400 rtl:left-0 rtl:right-auto rtl:pl-3">
+                                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Fuel Type -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2" id="lbl-fuel">
+                                <i class="fa-solid fa-hands-holding-circle fa-check-square-otext-amber-500 me-1"></i> Handling
+                            </label>
+                            <div class="relative">
+                                <select id="fuel-type" onchange="onFuelChange()"
+                                        class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white font-medium focus:ring-2 focus:ring-emerald-500 outline-none transition-all appearance-none cursor-pointer">
+                                    <option value="oui" selected>YES/OUI</option>
+                                    <option value="no" >NO/NON</option>
+                                </select>
+                                <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400 rtl:left-0 rtl:right-auto rtl:pl-3">
+                                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                                </span>
+                            </div>
+                            <!--<label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2" id="lbl-fuel">
+                                <i class="fa-solid fa-gas-pump text-amber-500 me-1"></i> Fuel Type & Price
+                            </label>
+                            <div class="relative">
+                                <select id="fuel-type" onchange="onFuelChange()"
+                                        class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white font-medium focus:ring-2 focus:ring-emerald-500 outline-none transition-all appearance-none cursor-pointer">
+                                    <option value="diesel" data-price="29.01" selected>Diesel / Gazole (29.01 DZD/L)</option>
+                                    <option value="essence" data-price="45.00">Essence Sans Plomb (45.00 DZD/L)</option>
+                                    <option value="gpl" data-price="9.00">GPL / Sirghaz (9.00 DZD/L)</option>
+                                </select>
+                                <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400 rtl:left-0 rtl:right-auto rtl:pl-3">
+                                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                                </span>
+                            </div>-->
+                        </div>
+                    </div>
+
+                    <!-- Consumption Range Slider & Custom Fuel Price -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2" id="lbl-hzrd">
+                                <i class="fa-solid fa-circle-radiation fa-check-square-otext-amber-500 me-1"></i> Hazardous product
+                            </label>
+                            <div class="relative">
+                                <select id="consumption-range" onchange="onHZDChange()"
+                                        class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white font-medium focus:ring-2 focus:ring-emerald-500 outline-none transition-all appearance-none cursor-pointer">
+                                    <option value="oui" >YES/OUI</option>
+                                    <option value="no" selected>NO/NON</option>
+                                </select>
+                                <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400 rtl:left-0 rtl:right-auto rtl:pl-3">
+                                    <i class="fa-solid fa-circle-radiation text-xs"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <!-- Poid -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2" id="lbl-wght">
+                                <i class="fa-solid fa-scale-balanced text-algeria-red me-1"></i> Weight
+                            </label>
+                            <div class="relative">
+                                <input id="lbl-wght-val" onkeyup="onWeigthChange()" type="number" value="0" disabled
+                                       class="w-full bg-gray-100 dark:bg-gray-900/90 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-600 dark:text-gray-300 font-medium cursor-not-allowed outline-none">
+                                <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-emerald-500 rtl:left-0 rtl:right-auto rtl:pl-3">
+                                    <div id="lbl-wght-lock"><i class="fa-solid fa-lock text-xs"></i></div>
+                                </span>
+                            </div>
+                        </div>
+                        <!-- Consumption Range Slider -->
+                        <!--<div class="bg-gray-50 dark:bg-gray-900/60 p-3.5 rounded-2xl border border-gray-200 dark:border-gray-800">
+                            <div class="flex justify-between items-center mb-1.5">
+                                <label class="text-xs font-semibold text-gray-700 dark:text-gray-300" id="lbl-consumption">Avg. Consumption</label>
+                                <span id="consumption-val" class="text-xs font-extrabold text-emerald-500">7.0 L/100km</span>
+                            </div>
+                            <input type="range" id="consumption-range" min="3.0" max="18.0" step="0.5" value="7.0"
+                                   oninput="updateConsumption(this.value)"
+                                   class="w-full h-2 bg-gray-200 dark:bg-gray-800 rounded-lg appearance-none cursor-pointer accent-emerald-500">
+                        </div>-->
+
+                        <!-- Fuel Price Slider / Customization -->
+                        <!--<div class="bg-gray-50 dark:bg-gray-900/60 p-3.5 rounded-2xl border border-gray-200 dark:border-gray-800">
+                            <div class="flex justify-between items-center mb-1.5">
+                                <label class="text-xs font-semibold text-gray-700 dark:text-gray-300" id="lbl-fuel-price">Fuel Unit Price</label>
+                                <span id="fuel-price-val" class="text-xs font-extrabold text-emerald-500">29.01 DZD/L</span>
+                            </div>
+                            <input type="range" id="fuel-price-range" min="5.00" max="60.00" step="0.5" value="29.01"
+                                   oninput="updateFuelPrice(this.value)"
+                                   class="w-full h-2 bg-gray-200 dark:bg-gray-800 rounded-lg appearance-none cursor-pointer accent-emerald-500">
+                        </div>-->
+                    </div>
+
+                    <!-- Passengers & Options -->
+                   <!--
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                Passengers Counter
+                        <div class="bg-gray-50 dark:bg-gray-900/60 p-3.5 rounded-2xl border border-gray-200 dark:border-gray-800 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-users text-indigo-400 text-sm"></i>
+                                <span class="text-xs font-semibold text-gray-700 dark:text-gray-300" id="lbl-passengers">Passengers</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <button type="button" onclick="adjustPassengers(-1)" class="w-7 h-7 rounded-lg bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold hover:bg-emerald-500 hover:text-white transition-all">-</button>
+                                <span id="passenger-count" class="text-sm font-extrabold text-gray-900 dark:text-white">1</span>
+                                <button type="button" onclick="adjustPassengers(1)" class="w-7 h-7 rounded-lg bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold hover:bg-emerald-500 hover:text-white transition-all">+</button>
+                            </div>
+                        </div>
+                    -->
+
+                        <!-- Checkbox Toggles -->
+                    <!--
+                        <div class="flex flex-col justify-center space-y-2.5">
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="chk-roundtrip" onchange="recalculate()" class="sr-only peer">
+                                <div class="w-9 h-5 bg-gray-300 dark:bg-gray-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] rtl:after:right-[2px] rtl:after:left-auto peer-checked:after:rtl:-translate-x-full after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600 relative"></div>
+                                <span class="ms-3 text-xs font-semibold text-gray-700 dark:text-gray-300" id="lbl-roundtrip">Round Trip (Aller-Retour)</span>
+                            </label>
+
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="chk-tolls" onchange="recalculate()" checked class="sr-only peer">
+                                <div class="w-9 h-5 bg-gray-300 dark:bg-gray-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] rtl:after:right-[2px] rtl:after:left-auto peer-checked:after:rtl:-translate-x-full after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600 relative"></div>
+                                <span class="ms-3 text-xs font-semibold text-gray-700 dark:text-gray-300" id="lbl-tolls">Include Highway Toll Est.</span>
+                            </label>
+                        </div>
+                    </div>
+                    -->
+
+                </form>
+            </div>
+
+            <!-- RIGHT SECTION: MAP VISUALIZATION & COST BREAKDOWN -->
+            <div class="lg:col-span-6 space-y-6">
+
+                <!-- COST BREAKDOWN SUMMARY CARD -->
+                <div class="glass-panel rounded-3xl p-6 relative overflow-hidden border border-emerald-500/20 space-y-6">
+                    <div class="flex items-baseline justify-between">
+                        <div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 font-semibold" id="lbl-total-cost">Estimated Total Trip Cost</p>
+                            <div class="flex items-baseline gap-2 mt-1">
+                                <span id="total-cost" class="text-4xl font-black text-gray-900 dark:text-white tracking-tight">0</span>
+                                <span class="text-lg font-extrabold text-emerald-500">DZD</span>
+                            </div>
+                        </div>
+
+                        <!-- Per Passenger Pill -->
+                        <div class="text-right bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-3">
+                            <p class="text-[10px] text-emerald-400 uppercase font-bold" id="lbl-per-person">Base rate</p>
+                            <p class="text-lg font-black text-emerald-500" id="cost-per-person">0 DZD</p>
+                        </div>
+                    </div>
+
+                    <!-- Key Metric Chips -->
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="bg-gray-100 dark:bg-gray-900/80 rounded-2xl p-3 border border-gray-200 dark:border-gray-800 text-center">
+                            <i class="fa-solid fa-road text-emerald-500 text-xs mb-1"></i>
+                            <p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold" id="lbl-metric-dist">Distance</p>
+                            <p id="metric-dist" class="text-sm font-black text-gray-900 dark:text-white">0 km</p>
+                        </div>
+
+                        <div class="bg-gray-100 dark:bg-gray-900/80 rounded-2xl p-3 border border-gray-200 dark:border-gray-800 text-center">
+                            <i class="fa-solid fa-clock text-blue-500 text-xs mb-1"></i>
+                            <p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold" id="lbl-metric-time">Duration</p>
+                            <p id="metric-time" class="text-sm font-black text-gray-900 dark:text-white">0h 0m</p>
+                        </div>
+
+                        <div class="bg-gray-100 dark:bg-gray-900/80 rounded-2xl p-3 border border-gray-200 dark:border-gray-800 text-center">
+                            <i class="fa-solid fa-gas-pump text-amber-500 text-xs mb-1"></i>
+                            <p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold" id="lbl-metric-fuel">Fuel Volume</p>
+                            <p id="metric-fuel" class="text-sm font-black text-gray-900 dark:text-white">0 L</p>
+                        </div>
+                    </div>
+
+                    <!-- Breakdown Table & Donut Chart -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center pt-2 border-t border-gray-200 dark:border-gray-800">
+                        <!-- Chart -->
+                        <div class="h-36 relative flex items-center justify-center">
+                            <canvas id="costChart"></canvas>
+                        </div>
+
+                        <!-- Numeric List -->
+                        <div class="space-y-2.5 text-xs">
+                            <div class="flex justify-between items-center">
+                                <span class="flex items-center gap-2 font-medium text-gray-600 dark:text-gray-300">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                                    <span id="lbl-breakdown-fuel">Vehicle coefficient</span>
+                                </span>
+                                <span id="val-fuel-cost" class="font-extrabold text-gray-900 dark:text-white">0 DZD</span>
+                            </div>
+
+                            <div class="flex justify-between items-center">
+                                <span class="flex items-center gap-2 font-medium text-gray-600 dark:text-gray-300">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                                    <span id="lbl-breakdown-toll">Difficulty coefficient</span>
+                                </span>
+                                <span id="val-toll-cost" class="font-extrabold text-gray-900 dark:text-white">0 DZD</span>
+                            </div>
+
+                            <!--<div class="flex justify-between items-center">
+                                <span class="flex items-center gap-2 font-medium text-gray-600 dark:text-gray-300">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                                    <span id="lbl-breakdown-wear">Wear & Maintenance</span>
+                                </span>
+                                <span id="val-wear-cost" class="font-extrabold text-gray-900 dark:text-white">0 DZD</span>
+                            </div>-->
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- LEAFLET / GOOGLE STYLE INTERACTIVE ROUTE MAP
+                <div class="glass-panel rounded-3xl p-4 relative overflow-hidden border border-emerald-500/20">
+                    <div class="flex items-center justify-between mb-3 px-2">
+                        <span class="text-xs uppercase font-extrabold tracking-widest text-emerald-500 flex items-center gap-2">
+                            <i class="fa-solid fa-map"></i> <span id="lbl-route-map">Interactive Route Map</span>
+                        </span>
+                        <span id="route-badge" class="text-xs bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/20 font-bold">
+                            Alger → Oran
+                        </span>
+                    </div>
+
+                    <div id="map" class="shadow-inner border border-gray-200 dark:border-gray-800"></div>
+                </div>
+                -->
+
+            </div>
+
+
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-1 gap-8 py-8 items-start">
+            <!-- LEAFLET / GOOGLE STYLE INTERACTIVE ROUTE MAP -->
+            <div class="glass-panel rounded-3xl p-4 relative overflow-hidden border border-emerald-500/20">
+                    <div class="flex items-center justify-between mb-3 px-2">
+                        <span class="text-xs uppercase font-extrabold tracking-widest text-emerald-500 flex items-center gap-2">
+                            <i class="fa-solid fa-map"></i> <span id="lbl-route-map">Interactive Route Map</span>
+                        </span>
+                        <span id="route-badge" class="text-xs bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/20 font-bold">
+                            Alger → Oran
+                        </span>
+                    </div>
+
+                    <!-- Map Render Target -->
+                    <div id="map" class="shadow-inner border border-gray-200 dark:border-gray-800"></div>
+                </div>
+        </div>
+
+    </main>
+
+    <footer class="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-xs text-gray-500">
+        <p id="footer-text">Ed Express • Travel & Highway Cost Calculator • All 69 Algerian Wilayas</p>
+    </footer>
+    <script src="{{url_for('static',filename='script/data.js')}}"></script>
+</body>
+</html>
